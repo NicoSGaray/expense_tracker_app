@@ -8,75 +8,82 @@ It will have a edit amount icon with a pop up
 
 import 'package:flutter/material.dart';
 
-// Budget model
-class Budget {
-  String category;
-  double amount;
-  double spent;
-
-  Budget({required this.category, required this.amount, this.spent = 0.0});
-
-  bool isOverBudget() {
-    return spent >= amount;
-  }
-
-  double percentageSpent() {
-    return (spent / amount) * 100;
-  }
-}
-
-// Budget widget that allows setting budgets
 class BudgetWidget extends StatefulWidget {
-  final Function(Budget) onAddBudget; // Callback function to pass the new budget
+  final Function(double) onAddBudget;
 
-  BudgetWidget({required this.onAddBudget});
+   const BudgetWidget({Key? key, required this.onAddBudget}) : super(key: key);
 
   @override
-  _BudgetWidgetState createState() => _BudgetWidgetState();
+  State<BudgetWidget> createState() => _BudgetWidgetState();
 }
 
 class _BudgetWidgetState extends State<BudgetWidget> {
-  final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _amountController = TextEditingController();
+  final _budgetController = TextEditingController();
+  String? _errorMessage; // For displaying error messages
+
+  void _submitBudget() {
+    final enteredBudget = _budgetController.text;
+
+    // Check if the entered value is a valid number
+    if (enteredBudget.isEmpty || double.tryParse(enteredBudget) == null) {
+      setState(() {
+        _errorMessage = 'Please enter a valid number for the budget.';
+      });
+      return; // Do not proceed if the input is invalid
+    }
+
+    // Convert the valid input to a double
+    final budgetAmount = double.parse(enteredBudget);
+
+    // Reset the error message if everything is valid
+    setState(() {
+      _errorMessage = null;
+    });
+
+    // Call the callback to add the budget
+    widget.onAddBudget(budgetAmount);
+
+    // Close the bottom sheet
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _categoryController,
-            decoration: InputDecoration(labelText: 'Category'),
-          ),
-          TextField(
-            controller: _amountController,
-            decoration: InputDecoration(labelText: 'Budget Amount'),
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              if (_categoryController.text.isNotEmpty &&
-                  _amountController.text.isNotEmpty) {
-                // Create a new budget
-                final budget = Budget(
-                  category: _categoryController.text,
-                  amount: double.parse(_amountController.text),
-                );
-
-                // Call the callback function to pass the budget back
-                widget.onAddBudget(budget);
-
-                // Close the modal after the budget is added
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text('Add Budget'),
-          ),
-        ],
+      padding: MediaQuery.of(context).viewInsets, // Adjust for keyboard
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _budgetController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Enter Budget Amount',
+                  errorText: _errorMessage, // Display error message if exists
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ElevatedButton(
+                  onPressed: _submitBudget,
+                  child: const Text('Set Budget'),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _budgetController.dispose();
+    super.dispose();
   }
 }

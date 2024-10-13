@@ -22,6 +22,7 @@ class _NewExpenseState extends State<NewExpense> {
   final _amountController = TextEditingController();
   DateTime? _selectedDate;
   Category _selectedCategory = Category.leisure;
+  bool _isRecurring = false; // New variable to track recurring status
 
   void _presentDatePicker() async {
     final now = DateTime.now();
@@ -30,8 +31,7 @@ class _NewExpenseState extends State<NewExpense> {
       context: context,
       initialDate: now,
       firstDate: firstDate,
-      lastDate: DateTime(now.year +
-          5), // Allows user to select dates up to 5 years in the future
+      lastDate: DateTime(now.year + 5), // Allows selection up to 5 years ahead
     );
     setState(() {
       _selectedDate = pickedDate;
@@ -45,7 +45,7 @@ class _NewExpenseState extends State<NewExpense> {
         builder: (ctx) => CupertinoAlertDialog(
           title: const Text('Invalid input'),
           content: const Text(
-              'Please make sure a valid title, amount, date and category was entered.'),
+              'Please make sure a valid title, amount, date and category were entered.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -62,7 +62,7 @@ class _NewExpenseState extends State<NewExpense> {
         builder: (ctx) => AlertDialog(
           title: const Text('Invalid input'),
           content: const Text(
-              'Please make sure a valid title, amount, date and category was entered.'),
+              'Please make sure a valid title, amount, date and category were entered.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -91,6 +91,7 @@ class _NewExpenseState extends State<NewExpense> {
         amount: enteredAmount,
         date: _selectedDate!,
         category: _selectedCategory,
+        isRecurring: _isRecurring, // Pass recurring status to the expense
       ),
     );
     Navigator.pop(context);
@@ -227,6 +228,17 @@ class _NewExpenseState extends State<NewExpense> {
                       ),
                     ],
                   ),
+                const SizedBox(height: 16),
+                // Recurring Expense Checkbox
+                CheckboxListTile(
+                  title: const Text('Recurring Expense'),
+                  value: _isRecurring,
+                  onChanged: (bool? newValue) {
+                    setState(() {
+                      _isRecurring = newValue ?? false;
+                    });
+                  },
+                ),
                 const SizedBox(height: 16),
                 if (width >= 600)
                   Row(children: [
