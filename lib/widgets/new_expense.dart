@@ -30,7 +30,8 @@ class _NewExpenseState extends State<NewExpense> {
       context: context,
       initialDate: now,
       firstDate: firstDate,
-      lastDate: now,
+      lastDate: DateTime(now.year +
+          5), // Allows user to select dates up to 5 years in the future
     );
     setState(() {
       _selectedDate = pickedDate;

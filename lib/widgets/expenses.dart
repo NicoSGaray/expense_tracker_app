@@ -77,7 +77,8 @@ class _ExpensesState extends State<Expenses> {
             setState(
               () {
                 _registeredExpenses.insert(expenseIndex, expense);
-                _updateBudgets(expense); // Re-add the expense to the budget if undone
+                _updateBudgets(
+                    expense); // Re-add the expense to the budget if undone
               },
             );
           },
@@ -105,15 +106,61 @@ class _ExpensesState extends State<Expenses> {
 
   @override
   Widget build(BuildContext context) {
+    final currentDate = DateTime.now(); // Gets the current date
+
+    // Separates expenses into past and future categories
+    final pastExpenses = _registeredExpenses
+        .where((expense) => expense.date.isBefore(currentDate)) // Past expenses
+        .toList();
+    final futureExpenses = _registeredExpenses
+        .where(
+            (expense) => expense.date.isAfter(currentDate)) // Future expenses
+        .toList();
 
     Widget mainContent = const Center(
       child: Text('No expenses found. Start adding some!'),
     );
 
     if (_registeredExpenses.isNotEmpty) {
-      mainContent = ExpensesList(
-        expenses: _registeredExpenses,
-        onRemoveExpense: _removeExpense,
+      // Displays upcoming and past expenses in a single column
+      mainContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Displays future expenses section if there are future expenses
+          if (futureExpenses.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Upcoming Expenses', // Title for future expenses section
+                style: Theme.of(context).textTheme.titleLarge, // Text style
+              ),
+            ),
+          if (futureExpenses.isNotEmpty)
+            Expanded(
+              child: ExpensesList(
+                expenses: futureExpenses, // Shows future expenses first
+                onRemoveExpense: _removeExpense, // Allows deletion of expenses
+              ),
+            ),
+
+          // Displays past expenses section if there are past expenses
+          if (pastExpenses.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Past Expenses', // Title for past expenses section
+                style: Theme.of(context).textTheme.titleLarge, // Text style
+              ),
+            ),
+          if (pastExpenses.isNotEmpty)
+            Expanded(
+              child: ExpensesList(
+                expenses:
+                    pastExpenses, // Shows past expenses after future expenses
+                onRemoveExpense: _removeExpense, // Allows deletion of expenses
+              ),
+            ),
+        ],
       );
     }
 
@@ -135,7 +182,7 @@ class _ExpensesState extends State<Expenses> {
         children: [
           // Show chart at the top
           Chart(expenses: _registeredExpenses),
-          
+
           // Display budget list under the chart
           if (_budgets.isNotEmpty)
             Padding(
@@ -143,7 +190,8 @@ class _ExpensesState extends State<Expenses> {
               child: Column(
                 children: _budgets.map((budget) {
                   return ListTile(
-                    title: Text('${budget.category} Budget: \$${budget.amount}'),
+                    title:
+                        Text('${budget.category} Budget: \$${budget.amount}'),
                     subtitle: Text('Spent: \$${budget.spent}'),
                     trailing: budget.isOverBudget()
                         ? const Text(
@@ -160,7 +208,7 @@ class _ExpensesState extends State<Expenses> {
                 }).toList(),
               ),
             ),
-          
+
           // Main content (expenses list) below budget list
           Expanded(
             child: mainContent,
